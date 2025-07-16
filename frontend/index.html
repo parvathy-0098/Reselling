@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resale Electronics Portal - Buy & Sell Used Electronics</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h2>📱 Resale Electronics</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html" class="active">Home</a></li>
+                <li><a href="products.html">Browse</a></li>
+                <li class="nav-categories">
+                    <a href="#">Categories</a>
+                    <ul class="dropdown" id="categoriesDropdown"></ul>
+                </li>
+                <li class="auth-links"></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Buy & Sell Electronics with Confidence</h1>
+            <p>Find great deals on smartphones, laptops, cameras, and more!</p>
+            <div class="search-box">
+                <input type="text" id="heroSearch" placeholder="Search for electronics..." 
+                       onkeypress="if(event.key==='Enter') searchProducts()">
+                <button onclick="searchProducts()">Search</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Categories -->
+    <section class="featured-categories">
+        <div class="container">
+            <h2>Popular Categories</h2>
+            <div class="category-grid" id="categoryGrid"></div>
+        </div>
+    </section>
+
+    <!-- Latest Products -->
+    <section class="latest-products">
+        <div class="container">
+            <h2>Latest Products</h2>
+            <div class="products-grid" id="latestProducts"></div>
+            <div class="text-center">
+                <a href="products.html" class="btn-primary">View All Products</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2>Why Choose Us?</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <h3>🔒 Secure Transactions</h3>
+                    <p>Safe and secure payment processing</p>
+                </div>
+                <div class="feature">
+                    <h3>✅ Verified Sellers</h3>
+                    <p>All sellers are verified for authenticity</p>
+                </div>
+                <div class="feature">
+                    <h3>🚚 Fast Shipping</h3>
+                    <p>Quick delivery to your doorstep</p>
+                </div>
+                <div class="feature">
+                    <h3>💰 Best Prices</h3>
+                    <p>Competitive prices on all electronics</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Resale Electronics Portal. All rights reserved.</p>
+            <p>Created for Programming for Information Systems - B9IS123</p>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async function() {
+            await loadCategories();
+            await loadLatestProducts();
+        });
+
+        async function loadCategories() {
+            try {
+                const response = await api.get('/categories');
+                const categories = response.data || response;
+                
+                // Populate dropdown
+                const dropdown = document.getElementById('categoriesDropdown');
+                if (dropdown) {
+                    dropdown.innerHTML = categories.map(cat => 
+                        `<li><a href="products.html?category=${cat.id}">${utils.escapeHtml(cat.name)}</a></li>`
+                    ).join('');
+                }
+
+                // Populate grid
+                const grid = document.getElementById('categoryGrid');
+                if (grid) {
+                    grid.innerHTML = categories.slice(0, 6).map(cat => `
+                        <div class="category-card" onclick="window.location.href='products.html?category=${cat.id}'">
+                            <div class="icon">${utils.getCategoryIcon(cat.name)}</div>
+                            <h3>${utils.escapeHtml(cat.name)}</h3>
+                            <p>${utils.escapeHtml(cat.description || '')}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadLatestProducts() {
+            try {
+                const response = await api.get('/products', { limit: 8 });
+                const products = response.data?.products || [];
+                
+                const grid = document.getElementById('latestProducts');
+                if (grid) {
+                    if (products.length === 0) {
+                        grid.innerHTML = '<p>No products available yet.</p>';
+                        return;
+                    }
+                    
+                    grid.innerHTML = products.map(product => `
+                        <div class="product-card" onclick="window.location.href='product-detail.html?id=${product.id}'">
+                            <img src="${product.image_url || CONFIG.DEFAULT_IMAGE}" 
+                                 alt="${utils.escapeHtml(product.title)}"
+                                 onerror="this.src='${CONFIG.DEFAULT_IMAGE}'">
+                            <div class="product-info">
+                                <h3>${utils.escapeHtml(product.title)}</h3>
+                                <p class="price">${utils.formatPrice(product.price)}</p>
+                                <p class="condition">Condition: ${utils.formatCondition(product.condition)}</p>
+                                <p class="seller">by ${utils.escapeHtml(product.seller_name || 'Unknown')}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        function searchProducts() {
+            const query = document.getElementById('heroSearch').value;
+            if (query.trim()) {
+                window.location.href = `products.html?search=${encodeURIComponent(query)}`;
+            }
+        }
+    </script>
+</body>
+</html>

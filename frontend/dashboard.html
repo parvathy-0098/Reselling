@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Resale Electronics Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h2>📱 Resale Electronics</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="products.html">Browse</a></li>
+                <li><a href="dashboard.html" class="active">Dashboard</a></li>
+                <li><a href="my-products.html">My Products</a></li>
+                <li><a href="add-product.html">Sell</a></li>
+                <li><a href="transactions.html">Orders</a></li>
+                <li><a href="#" id="logoutLink">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dashboard">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>Welcome, <span id="userName"></span>!</h1>
+                <p>Member since <span id="memberSince"></span></p>
+            </div>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3 id="totalProducts">0</h3>
+                    <p>Products Listed</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalSales">0</h3>
+                    <p>Items Sold</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalPurchases">0</h3>
+                    <p>Items Purchased</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalRevenue">$0</h3>
+                    <p>Total Revenue</p>
+                </div>
+            </div>
+
+            <div class="dashboard-sections">
+                <section class="recent-activities">
+                    <h2>Recent Activities</h2>
+                    <div id="recentActivities" class="activities-list"></div>
+                </section>
+
+                <section class="quick-actions">
+                    <h2>Quick Actions</h2>
+                    <div class="action-buttons">
+                        <a href="add-product.html" class="btn-primary">List New Product</a>
+                        <a href="my-products.html" class="btn-secondary">Manage Products</a>
+                        <a href="transactions.html" class="btn-secondary">View Orders</a>
+                        <a href="products.html" class="btn-secondary">Browse Products</a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            dashboard.init();
+        });
+    </script>
+</body>
+</html>

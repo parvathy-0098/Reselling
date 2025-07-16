@@ -1,0 +1,399 @@
+<!-- favorites.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorites - Resale Electronics Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div id="mainNavigation"></div>
+
+    <div class="favorites-page">
+        <div class="container">
+            <h1>My Favorites</h1>
+            <p class="page-subtitle">Products you've saved for later</p>
+            
+            <div id="favoritesContainer" class="products-grid">
+                <div class="loading">Loading your favorites...</div>
+            </div>
+            
+            <div id="emptyFavorites" class="empty-state" style="display: none;">
+                <h2>No favorites yet</h2>
+                <p>Start browsing and save products you like!</p>
+                <a href="products.html" class="btn-primary">Browse Products</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainFooter"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!requireAuth()) return;
+            await loadFavorites();
+        });
+
+        async function loadFavorites() {
+            try {
+                const favorites = await api.get('/products/favorites/my');
+                displayFavorites(favorites.data);
+            } catch (error) {
+                console.error('Error loading favorites:', error);
+                showNotification('Failed to load favorites', 'error');
+            }
+        }
+
+        function displayFavorites(favorites) {
+            const container = document.getElementById('favoritesContainer');
+            const emptyState = document.getElementById('emptyFavorites');
+            
+            if (!favorites || favorites.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            container.innerHTML = favorites.map(product => `
+                <div class="product-card" data-product-id="${product.id}">
+                    <div class="favorite-badge active" onclick="removeFavorite(${product.id}, event)">❤️</div>
+                    <img src="${product.image_url || '/assets/images/no-image.svg'}" 
+                         alt="${product.title}"
+                         onclick="window.location.href='product-detail.html?id=${product.id}'">
+                    <div class="product-info">
+                        <h3>${product.title}</h3>
+                        <p class="price">${formatPrice(product.price)}</p>
+                        <p class="condition">Condition: ${product.condition}</p>
+                        <p class="seller">by ${product.seller_name}</p>
+                        <div class="product-actions">
+                            <a href="product-detail.html?id=${product.id}" class="btn-primary btn-sm">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function removeFavorite(productId, event) {
+            event.stopPropagation();
+            
+            if (!confirm('Remove from favorites?')) return;
+            
+            try {
+                await api.post(`/products/${productId}/favorite`);
+                showNotification('Removed from favorites', 'success');
+                
+                // Remove card from view
+                const card = document.querySelector(`[data-product-id="${productId}"]`);
+                if (card) {
+                    card.remove();
+                }
+                
+                // Check if any favorites left
+                const remainingCards = document.querySelectorAll('.product-card');
+                if (remainingCards.length === 0) {
+                    document.getElementById('favoritesContainer').style.display = 'none';
+                    document.getElementById('emptyFavorites').style.display = 'block';
+                }
+            } catch (error) {
+                showNotification('Failed to remove favorite', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
+
+<!-- messages.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messages - Resale Electronics Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div id="mainNavigation"></div>
+
+    <div class="messages-page">
+        <div class="container">
+            <h1>Messages</h1>
+            
+            <div class="messages-layout">
+                <div class="conversations-sidebar">
+                    <div class="conversations-header">
+                        <h3>Conversations</h3>
+                    </div>
+                    <div id="conversationsList" class="conversations-list">
+                        <div class="loading">Loading conversations...</div>
+                    </div>
+                </div>
+                
+                <div id="chatWindow" class="chat-window" style="display: none;">
+                    <div class="chat-header">
+                        <h3 id="chatUserName"></h3>
+                        <button onclick="closeChatWindow()" class="close-chat">×</button>
+                    </div>
+                    
+                    <div id="messagesList" class="messages-list"></div>
+                    
+                    <form class="message-input-form" onsubmit="sendMessageFromForm(event)">
+                        <input type="text" 
+                               id="messageInput" 
+                               placeholder="Type a message..." 
+                               required>
+                        <button type="submit" class="send-btn">Send</button>
+                    </form>
+                </div>
+                
+                <div id="emptyChat" class="empty-chat">
+                    <h2>Select a conversation</h2>
+                    <p>Choose a conversation from the left to start messaging</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainFooter"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/messages.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!requireAuth()) return;
+            initializeMessaging();
+        });
+    </script>
+</body>
+</html>
+
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Resale Electronics Portal</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <div id="mainNavigation"></div>
+
+    <div class="profile-page">
+        <div class="container">
+            <h1>My Profile</h1>
+            
+            <div class="profile-layout">
+                <div class="profile-sidebar">
+                    <div class="profile-avatar">
+                        <span id="avatarInitial"></span>
+                    </div>
+                    <h2 id="profileName"></h2>
+                    <p id="profileEmail"></p>
+                    <p class="member-since">Member since <span id="memberDate"></span></p>
+                    
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span id="totalListings">0</span>
+                            <label>Listings</label>
+                        </div>
+                        <div class="stat">
+                            <span id="totalSold">0</span>
+                            <label>Sold</label>
+                        </div>
+                        <div class="stat">
+                            <span id="totalBought">0</span>
+                            <label>Bought</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-content">
+                    <div class="profile-section">
+                        <h3>Personal Information</h3>
+                        <form id="profileForm" onsubmit="updateProfile(event)">
+                            <div class="form-group">
+                                <label for="full_name">Full Name</label>
+                                <input type="text" id="full_name" name="full_name" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="phone">Phone</label>
+                                <input type="tel" id="phone" name="phone">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <textarea id="address" name="address" rows="2"></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="city">City</label>
+                                    <input type="text" id="city" name="city">
+                                </div>
+                                <div class="form-group">
+                                    <label for="state">State</label>
+                                    <input type="text" id="state" name="state">
+                                </div>
+                                <div class="form-group">
+                                    <label for="zip_code">ZIP Code</label>
+                                    <input type="text" id="zip_code" name="zip_code">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+                    
+                    <div class="profile-section">
+                        <h3>Change Password</h3>
+                        <form id="passwordForm" onsubmit="changePassword(event)">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <input type="password" id="currentPassword" name="currentPassword" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <input type="password" id="newPassword" name="newPassword" required minlength="6">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            </div>
+                            
+                            <button type="submit" class="btn-primary">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainFooter"></div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/navigation.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!requireAuth()) return;
+            await loadProfile();
+        });
+
+        async function loadProfile() {
+            try {
+                const profile = await api.get('/auth/profile');
+                const user = profile.data;
+                
+                // Update UI
+                document.getElementById('avatarInitial').textContent = user.username.charAt(0).toUpperCase();
+                document.getElementById('profileName').textContent = user.full_name || user.username;
+                document.getElementById('profileEmail').textContent = user.email;
+                document.getElementById('memberDate').textContent = formatDate(user.created_at);
+                
+                // Fill form
+                document.getElementById('full_name').value = user.full_name || '';
+                document.getElementById('phone').value = user.phone || '';
+                document.getElementById('address').value = user.address || '';
+                document.getElementById('city').value = user.city || '';
+                document.getElementById('state').value = user.state || '';
+                document.getElementById('zip_code').value = user.zip_code || '';
+                
+                // Load stats
+                await loadProfileStats();
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showNotification('Failed to load profile', 'error');
+            }
+        }
+
+        async function loadProfileStats() {
+            try {
+                const userId = getUser().id;
+                const [products, transactions] = await Promise.all([
+                    api.get(`/products/seller/${userId}`),
+                    api.get('/transactions/my')
+                ]);
+                
+                const transactionList = Array.isArray(transactions.data) 
+                    ? transactions.data 
+                    : transactions.data.transactions || [];
+                
+                document.getElementById('totalListings').textContent = products.length;
+                document.getElementById('totalSold').textContent = 
+                    transactionList.filter(t => t.type === 'sale' && t.status === 'completed').length;
+                document.getElementById('totalBought').textContent = 
+                    transactionList.filter(t => t.type === 'purchase').length;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            const form = event.target;
+            
+            try {
+                const data = {
+                    full_name: form.full_name.value,
+                    phone: form.phone.value,
+                    address: form.address.value,
+                    city: form.city.value,
+                    state: form.state.value,
+                    zip_code: form.zip_code.value
+                };
+                
+                const response = await api.put('/auth/profile', data);
+                
+                // Update stored user data
+                const user = JSON.parse(localStorage.getItem('user'));
+                Object.assign(user, response.data);
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                showNotification('Profile updated successfully', 'success');
+                
+                // Trigger user changed event
+                window.dispatchEvent(new CustomEvent('userChanged', { detail: user }));
+            } catch (error) {
+                showNotification('Failed to update profile', 'error');
+            }
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            const form = event.target;
+            
+            if (form.newPassword.value !== form.confirmPassword.value) {
+                showNotification('New passwords do not match', 'error');
+                return;
+            }
+            
+            try {
+                await api.post('/auth/change-password', {
+                    currentPassword: form.currentPassword.value,
+                    newPassword: form.newPassword.value
+                });
+                
+                showNotification('Password changed successfully', 'success');
+                form.reset();
+            } catch (error) {
+                showNotification(error.message || 'Failed to change password', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

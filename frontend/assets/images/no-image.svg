@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300">
-  <rect width="400" height="300" fill="#e9ecef"/>
-  <rect x="1" y="1" width="398" height="298" fill="none" stroke="#dee2e6" stroke-width="2"/>
-  <text x="200" y="130" font-family="Arial" font-size="60" fill="#adb5bd" text-anchor="middle">📷</text>
-  <text x="200" y="180" font-family="Arial" font-size="20" fill="#6c757d" text-anchor="middle">No Image Available</text>
-</svg>

@@ -1,72 +1,41 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 const path = require('path');
-require('dotenv').config();
-
-// Import database configuration
-const db = require('./config/database');
-
-// Import routes
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
-const productRoutes = require('./routes/products');
-const categoryRoutes = require('./routes/categories');
-const transactionRoutes = require('./routes/transactions');
+const productRoutes = require('./src/routes/productRoutes');
+const userRoutes = require('./src/routes/userRoutes');
+const { initializeDatabase } = require('./src/config/database');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors({
+    origin: ['http://localhost:3001', 'http://127.0.0.1:5501', 'http://localhost:5501'],
+    credentials: true
+}));
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+// Initialize database
+initializeDatabase();
+
+// Routes
 app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/transactions', transactionRoutes);
+app.use('/api/users', userRoutes);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ 
-        status: 'OK', 
-        message: 'Resale Electronics Portal API is running',
-        timestamp: new Date().toISOString()
-    });
+// Serve frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || 'Internal server error',
-        error: process.env.NODE_ENV === 'development' ? err : {}
-    });
+    res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route not found'
-    });
+app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
 });
-
-// Initialize database and start server
-db.initialize()
-    .then(() => {
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-            console.log(`API URL: http://localhost:${PORT}/api`);
-        });
-    })
-    .catch(err => {
-        console.error('Failed to initialize database:', err);
-        process.exit(1);
-    });
 
 module.exports = app;

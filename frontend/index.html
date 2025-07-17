@@ -3,171 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resale Electronics Portal - Buy & Sell Used Electronics</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <title>Resale Electronics Portal</title>
+    <link rel="stylesheet" href="src/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">
-                <h2>📱 Resale Electronics</h2>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="products.html">Browse</a></li>
-                <li class="nav-categories">
-                    <a href="#">Categories</a>
-                    <ul class="dropdown" id="categoriesDropdown"></ul>
-                </li>
-                <li class="auth-links"></li>
-            </ul>
-        </div>
-    </nav>
-
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h1>Buy & Sell Electronics with Confidence</h1>
-            <p>Find great deals on smartphones, laptops, cameras, and more!</p>
-            <div class="search-box">
-                <input type="text" id="heroSearch" placeholder="Search for electronics..." 
-                       onkeypress="if(event.key==='Enter') searchProducts()">
-                <button onclick="searchProducts()">Search</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Categories -->
-    <section class="featured-categories">
-        <div class="container">
-            <h2>Popular Categories</h2>
-            <div class="category-grid" id="categoryGrid"></div>
-        </div>
-    </section>
-
-    <!-- Latest Products -->
-    <section class="latest-products">
-        <div class="container">
-            <h2>Latest Products</h2>
-            <div class="products-grid" id="latestProducts"></div>
-            <div class="text-center">
-                <a href="products.html" class="btn-primary">View All Products</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features">
-        <div class="container">
-            <h2>Why Choose Us?</h2>
-            <div class="features-grid">
-                <div class="feature">
-                    <h3>🔒 Secure Transactions</h3>
-                    <p>Safe and secure payment processing</p>
+    <div id="app">
+        <header class="header">
+            <div class="container">
+                <div class="logo">
+                    <i class="fas fa-bolt"></i>
+                    <h1>ElectroMarket</h1>
                 </div>
-                <div class="feature">
-                    <h3>✅ Verified Sellers</h3>
-                    <p>All sellers are verified for authenticity</p>
-                </div>
-                <div class="feature">
-                    <h3>🚚 Fast Shipping</h3>
-                    <p>Quick delivery to your doorstep</p>
-                </div>
-                <div class="feature">
-                    <h3>💰 Best Prices</h3>
-                    <p>Competitive prices on all electronics</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Resale Electronics Portal. All rights reserved.</p>
-            <p>Created for Programming for Information Systems - B9IS123</p>
-        </div>
-    </footer>
-
-    <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script>
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', async function() {
-            await loadCategories();
-            await loadLatestProducts();
-        });
-
-        async function loadCategories() {
-            try {
-                const response = await api.get('/categories');
-                const categories = response.data || response;
-                
-                // Populate dropdown
-                const dropdown = document.getElementById('categoriesDropdown');
-                if (dropdown) {
-                    dropdown.innerHTML = categories.map(cat => 
-                        `<li><a href="products.html?category=${cat.id}">${utils.escapeHtml(cat.name)}</a></li>`
-                    ).join('');
-                }
-
-                // Populate grid
-                const grid = document.getElementById('categoryGrid');
-                if (grid) {
-                    grid.innerHTML = categories.slice(0, 6).map(cat => `
-                        <div class="category-card" onclick="window.location.href='products.html?category=${cat.id}'">
-                            <div class="icon">${utils.getCategoryIcon(cat.name)}</div>
-                            <h3>${utils.escapeHtml(cat.name)}</h3>
-                            <p>${utils.escapeHtml(cat.description || '')}</p>
+                <nav class="nav">
+                    <ul class="nav-links">
+                        <li><a href="#" id="home-link" class="nav-link active">Home</a></li>
+                        <li><a href="#" id="products-link" class="nav-link">Products</a></li>
+                        <li><a href="#" id="about-link" class="nav-link">About</a></li>
+                    </ul>
+                    <div class="auth-section">
+                        <div id="auth-buttons">
+                            <button id="login-btn" class="btn btn-outline">Login</button>
+                            <button id="register-btn" class="btn btn-primary">Register</button>
                         </div>
-                    `).join('');
-                }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-            }
-        }
+                        <div id="user-info" style="display: none;">
+                            <div class="user-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span id="username"></span>
+                            <button id="logout-btn" class="btn btn-outline">Logout</button>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </header>
 
-        async function loadLatestProducts() {
-            try {
-                const response = await api.get('/products', { limit: 8 });
-                const products = response.data?.products || [];
-                
-                const grid = document.getElementById('latestProducts');
-                if (grid) {
-                    if (products.length === 0) {
-                        grid.innerHTML = '<p>No products available yet.</p>';
-                        return;
-                    }
-                    
-                    grid.innerHTML = products.map(product => `
-                        <div class="product-card" onclick="window.location.href='product-detail.html?id=${product.id}'">
-                            <img src="${product.image_url || CONFIG.DEFAULT_IMAGE}" 
-                                 alt="${utils.escapeHtml(product.title)}"
-                                 onerror="this.src='${CONFIG.DEFAULT_IMAGE}'">
-                            <div class="product-info">
-                                <h3>${utils.escapeHtml(product.title)}</h3>
-                                <p class="price">${utils.formatPrice(product.price)}</p>
-                                <p class="condition">Condition: ${utils.formatCondition(product.condition)}</p>
-                                <p class="seller">by ${utils.escapeHtml(product.seller_name || 'Unknown')}</p>
+        <main class="main">
+            <!-- Home Page -->
+            <section id="home-section" class="hero">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h2>Buy & Sell Electronics with Confidence</h2>
+                        <p>Discover amazing deals on pre-owned electronics. From smartphones to laptops, find quality devices at unbeatable prices.</p>
+                        <div class="hero-buttons">
+                            <button id="hero-browse-btn" class="btn btn-primary btn-large">Browse Products</button>
+                            <button id="hero-sell-btn" class="btn btn-outline btn-large">Start Selling</button>
+                        </div>
+                    </div>
+                    <div class="hero-image">
+                        <div class="floating-cards">
+                            <div class="floating-card">
+                                <i class="fas fa-mobile-alt"></i>
+                                <span>Smartphones</span>
+                            </div>
+                            <div class="floating-card">
+                                <i class="fas fa-laptop"></i>
+                                <span>Laptops</span>
+                            </div>
+                            <div class="floating-card">
+                                <i class="fas fa-tv"></i>
+                                <span>Electronics</span>
                             </div>
                         </div>
-                    `).join('');
-                }
-            } catch (error) {
-                console.error('Error loading products:', error);
-            }
-        }
+                    </div>
+                </div>
+                
+                <div class="stats-section">
+                    <div class="container">
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <i class="fas fa-users"></i>
+                                <h3>1000+</h3>
+                                <p>Happy Customers</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-box"></i>
+                                <h3>500+</h3>
+                                <p>Products Sold</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-star"></i>
+                                <h3>4.9</h3>
+                                <p>Average Rating</p>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-shield-alt"></i>
+                                <h3>100%</h3>
+                                <p>Secure Transactions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-        function searchProducts() {
-            const query = document.getElementById('heroSearch').value;
-            if (query.trim()) {
-                window.location.href = `products.html?search=${encodeURIComponent(query)}`;
-            }
-        }
-    </script>
+            <!-- Authentication Forms -->
+            <div id="auth-section" class="modal-overlay" style="display: none;">
+                <div class="modal-container">
+                    <div id="login-form" class="auth-form" style="display: none;">
+                        <div class="form-header">
+                            <h2>Welcome Back</h2>
+                            <p>Sign in to your account</p>
+                        </div>
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="login-email" placeholder="Email" required>
+                            </div>
+                            <div class="form-group">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="login-password" placeholder="Password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+                        </form>
+                        <div class="form-footer">
+                            <p>Don't have an account? <a href="#" id="switch-to-register">Sign up</a></p>
+                        </div>
+                    </div>
+
+                    <div id="register-form" class="auth-form" style="display: none;">
+                        <div class="form-header">
+                            <h2>Create Account</h2>
+                            <p>Join our community today</p>
+                        </div>
+                        <form id="registerForm">
+                            <div class="form-group">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="register-username" placeholder="Username" required>
+                            </div>
+                            <div class="form-group">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="register-email" placeholder="Email" required>
+                            </div>
+                            <div class="form-group">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="register-password" placeholder="Password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+                        </form>
+                        <div class="form-footer">
+                            <p>Already have an account? <a href="#" id="switch-to-login">Sign in</a></p>
+                        </div>
+                    </div>
+                    <button class="modal-close" id="auth-close">&times;</button>
+                </div>
+            </div>
+
+            <!-- Product Management -->
+            <div id="product-section" style="display: none;">
+                <div class="container">
+                    <div class="section-header">
+                        <h2>Our Products</h2>
+                        <button id="add-product-btn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            Add Product
+                        </button>
+                    </div>
+
+                    <div class="filters-section">
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-input" placeholder="Search products...">
+                        </div>
+                        <div class="filter-group">
+                            <select id="category-filter">
+                                <option value="">All Categories</option>
+                                <option value="Smartphone">Smartphones</option>
+                                <option value="Laptop">Laptops</option>
+                                <option value="Television">Televisions</option>
+                                <option value="Gaming">Gaming</option>
+                                <option value="Audio">Audio</option>
+                                <option value="Camera">Cameras</option>
+                            </select>
+                            <button id="search-btn" class="btn btn-secondary">
+                                <i class="fas fa-filter"></i>
+                                Filter
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="products-container">
+                        <div id="products-grid" class="products-grid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Form Modal -->
+            <div id="product-form" class="modal-overlay" style="display: none;">
+                <div class="modal-container">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 id="form-title">Add New Product</h2>
+                            <button class="modal-close" id="product-close">&times;</button>
+                        </div>
+                        <form id="productForm">
+                            <input type="hidden" id="product-id">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Product Name</label>
+                                    <input type="text" id="product-name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Category</label>
+                                    <select id="product-category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="Smartphone">Smartphone</option>
+                                        <option value="Laptop">Laptop</option>
+                                        <option value="Television">Television</option>
+                                        <option value="Gaming">Gaming</option>
+                                        <option value="Audio">Audio</option>
+                                        <option value="Camera">Camera</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Price ($)</label>
+                                    <input type="number" id="product-price" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Condition</label>
+                                    <select id="product-condition" required>
+                                        <option value="">Select Condition</option>
+                                        <option value="Like New">Like New</option>
+                                        <option value="Good">Good</option>
+                                        <option value="Fair">Fair</option>
+                                        <option value="Poor">Poor</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="product-description" rows="4"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL</label>
+                                <input type="url" id="product-image" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" id="cancel-btn" class="btn btn-outline">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Save Product</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>ElectroMarket</h3>
+                        <p>Your trusted platform for buying and selling electronics.</p>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="#">Home</a></li>
+                            <li><a href="#">Products</a></li>
+                            <li><a href="#">About</a></li>
+                            <li><a href="#">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h4>Contact</h4>
+                        <p><i class="fas fa-envelope"></i> info@electromarket.com</p>
+                        <p><i class="fas fa-phone"></i> +1 (555) 123-4567</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 ElectroMarket. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script src="src/js/api.js"></script>
+    <script src="src/js/auth.js"></script>
+    <script src="src/js/app.js"></script>
 </body>
 </html>
